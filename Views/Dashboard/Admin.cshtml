@@ -1,0 +1,248 @@
+
+@model BusinessCRM.ViewModels.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+
+    Layout = "_Layout";
+}
+
+<div class="container-fluid py-3 admin-premium">
+
+    <!-- Premium welcome banner -->
+    <section class="admin-hero mb-4">
+        <div class="admin-hero-content">
+            <span class="admin-eyebrow">
+                <span class="admin-live-dot"></span>
+                BUSINESSCRM CONTROL CENTER
+            </span>
+
+            <h1>Administrative Dashboard</h1>
+
+            <p>
+                Your business at a glance. Monitor customers,
+                employees, and daily activity in one place.
+            </p>
+
+            <div class="admin-hero-actions">
+                <a asp-controller="Customers"
+                   asp-action="Create"
+                   class="admin-btn admin-btn-light">
+                    <span aria-hidden="true">?</span>
+                    New Customer
+                </a>
+
+                <a asp-controller="Customers"
+                   asp-action="Index"
+                   class="admin-btn admin-btn-glass">
+                    View Customers
+                    <span aria-hidden="true">?</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-hero-decoration" aria-hidden="true">
+            <div class="admin-orbit admin-orbit-one"></div>
+            <div class="admin-orbit admin-orbit-two"></div>
+            <div class="admin-hero-symbol">B</div>
+        </div>
+    </section>
+
+    <!-- Dashboard heading -->
+    <div class="admin-section-heading">
+        <div>
+            <span class="admin-section-kicker">OVERVIEW</span>
+            <h2>Business Summary</h2>
+            <p>Your current business metrics</p>
+        </div>
+
+        <span class="admin-date-label">
+            <span aria-hidden="true">?</span>
+            Live dashboard data
+        </span>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row g-4 mb-4">
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <article class="admin-stat-card stat-blue">
+                <div class="admin-stat-top">
+                    <span class="admin-stat-label">Total Employees</span>
+                    <div class="admin-stat-icon">?</div>
+                </div>
+
+                <div class="admin-stat-value">@Model.TotalEmployees</div>
+
+                <div class="admin-stat-bottom">
+                    <span class="admin-status-dot"></span>
+                    Employee records
+                </div>
+
+                <div class="admin-stat-decoration"></div>
+            </article>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <article class="admin-stat-card stat-purple">
+                <div class="admin-stat-top">
+                    <span class="admin-stat-label">Total Customers</span>
+                    <div class="admin-stat-icon">?</div>
+                </div>
+
+                <div class="admin-stat-value">@Model.TotalCustomers</div>
+
+                <div class="admin-stat-bottom">
+                    <span class="admin-status-dot"></span>
+                    CRM records
+                </div>
+
+                <div class="admin-stat-decoration"></div>
+            </article>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <article class="admin-stat-card stat-orange">
+                <div class="admin-stat-top">
+                    <span class="admin-stat-label">Today's Clock-Ins</span>
+                    <div class="admin-stat-icon">?</div>
+                </div>
+
+                <div class="admin-stat-value">@Model.TodayClockedIn</div>
+
+                <div class="admin-stat-bottom">
+                    <span class="admin-status-dot"></span>
+                    Today's attendance
+                </div>
+
+                <div class="admin-stat-decoration"></div>
+            </article>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <article class="admin-stat-card stat-teal">
+                <div class="admin-stat-top">
+                    <span class="admin-stat-label">Pending Tasks</span>
+                    <div class="admin-stat-icon">?</div>
+                </div>
+
+                <div class="admin-stat-value">@Model.PendingTasks</div>
+
+                <div class="admin-stat-bottom">
+                    <span class="admin-status-dot"></span>
+                    Outstanding tasks
+                </div>
+
+                <div class="admin-stat-decoration"></div>
+            </article>
+        </div>
+
+    </div>
+
+    <!-- Recent customers -->
+    <section class="admin-panel">
+
+        <div class="admin-panel-header">
+            <div>
+                <span class="admin-section-kicker">CUSTOMER MANAGEMENT</span>
+                <h2>Recent Customers</h2>
+                <p>Latest customer records in your CRM</p>
+            </div>
+
+            <a asp-controller="Customers"
+               asp-action="Index"
+               class="admin-btn admin-btn-outline">
+                View All <span aria-hidden="true">?</span>
+            </a>
+        </div>
+
+        @if (Model.RecentCustomers == null ||
+        !Model.RecentCustomers.Any())
+
+        {
+            <div class="admin-empty-state">
+                <div class="admin-empty-icon">?</div>
+                <h3>No customers yet</h3>
+                <p>Your customer records will appear here when added.</p>
+
+                <a asp-controller="Customers"
+                   asp-action="Create"
+                   class="admin-btn admin-btn-primary">
+                    ? Create First Customer
+                </a>
+            </div>
+        }
+
+        else
+
+        {
+            <div class="table-responsive admin-table-wrap">
+                <table class="table admin-customer-table">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Company</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Created Date</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var customer in Model.RecentCustomers)
+
+                        {
+                            <tr>
+                                <td>
+                                    <div class="admin-customer-name">
+                                        <span class="admin-avatar">
+                                            @(string.IsNullOrWhiteSpace(customer.Name)
+                                                ? "?"
+                                                : customer.Name.Trim().Substring(0, 1).ToUpper())
+                                        </span>
+
+                                        <span>@customer.Name</span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    @(customer.CompanyName ?? "—")
+                                </td>
+
+                                <td>
+                                    @(customer.Email ?? "—")
+                                </td>
+
+                                <td>
+                                    @(customer.Phone ?? "—")
+                                </td>
+
+                                <td>
+                                    <span class="admin-date">
+                                        @customer.CreatedAt.ToString("MMM dd, yyyy")
+                                    </span>
+                                </td>
+
+                                <td class="text-end">
+                                    <a asp-controller="Customers"
+                                       asp-action="Edit"
+                                       asp-route-id="@customer.Id"
+                                       class="admin-btn admin-btn-edit">
+                                        Edit
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <div class="admin-panel-footer">
+            Showing the latest customer records available to this dashboard.
+        </div>
+
+    </section>
+
+</div>

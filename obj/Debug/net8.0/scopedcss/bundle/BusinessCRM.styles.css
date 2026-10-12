@@ -1,0 +1,49 @@
+/* _content/BusinessCRM/Views/Shared/_Layout.cshtml.rz.scp.css */
+/* Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+
+a.navbar-brand[b-jnpfq6llid] {
+  white-space: normal;
+  text-align: center;
+  word-break: break-all;
+}
+
+a[b-jnpfq6llid] {
+  color: #0077cc;
+}
+
+.btn-primary[b-jnpfq6llid] {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+.nav-pills .nav-link.active[b-jnpfq6llid], .nav-pills .show > .nav-link[b-jnpfq6llid] {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+.border-top[b-jnpfq6llid] {
+  border-top: 1px solid #e5e5e5;
+}
+.border-bottom[b-jnpfq6llid] {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow[b-jnpfq6llid] {
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+button.accept-policy[b-jnpfq6llid] {
+  font-size: 1rem;
+  line-height: inherit;
+}
+
+.footer[b-jnpfq6llid] {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+}

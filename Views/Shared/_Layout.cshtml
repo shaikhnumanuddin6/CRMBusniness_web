@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - BusinessCRM</title>
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/BusinessCRM.styles.css"
+          asp-append-version="true" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet" />
+</head>
+
+<body class="crm-body">
+
+    <header>
+        <nav class="navbar navbar-expand-lg crm-navbar">
+            <div class="container-fluid px-3 px-lg-4">
+
+                <a class="navbar-brand crm-brand"
+                   asp-area=""
+                   asp-controller="Home"
+                   asp-action="Index">
+
+                    <span class="crm-brand-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="23" height="23"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                        </svg>
+                    </span>
+
+                    <span>Business<span class="crm-brand-highlight">CRM</span></span>
+                </a>
+
+                <button class="navbar-toggler crm-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#mainNavbar"
+                        aria-controls="mainNavbar"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation">
+
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="mainNavbar">
+
+                    <ul class="navbar-nav crm-nav-links me-auto">
+
+                        @if (User.Identity != null &&
+                        User.Identity.IsAuthenticated)
+
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link crm-nav-link"
+                                   asp-controller="Dashboard"
+                                   asp-action="Index">
+                                    <span class="crm-nav-dot"></span>
+                                    Dashboard
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link crm-nav-link"
+                                   asp-controller="Customers"
+                                   asp-action="Index">
+                                    Customers
+                                </a>
+                            </li>
+                        }
+
+                    </ul>
+
+                    <div class="crm-account-area">
+                        <partial name="_LoginPartial" />
+                    </div>
+
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main role="main" class="crm-main">
+
+        <div class="container-fluid px-3 px-lg-4">
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show crm-alert"
+                     role="alert">
+
+                    <strong>Success!</strong>
+                    @TempData["Success"]
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Close"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show crm-alert"
+                     role="alert">
+
+                    <strong>Please note:</strong>
+                    @TempData["Error"]
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="crm-page-enter">
+                @RenderBody()
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="crm-footer">
+        <div class="container-fluid px-3 px-lg-4">
+            <div class="d-flex flex-column flex-md-row
+                        justify-content-between align-items-center gap-2">
+
+                <span>
+                    &copy; @DateTime.UtcNow.Year
+                    <strong>BusinessCRM</strong>.
+                    All rights reserved.
+                </span>
+
+                <span class="crm-footer-security">
+                    <span class="crm-security-dot"></span>
+                    Secure business management
+                </span>
+
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

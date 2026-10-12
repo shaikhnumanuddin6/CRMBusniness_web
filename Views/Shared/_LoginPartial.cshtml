@@ -1,0 +1,32 @@
+@using Microsoft.AspNetCore.Identity
+@using BusinessCRM.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav">
+@if (SignInManager.IsSignedIn(User))
+{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var displayName = currentUser?.FullName ?? User.Identity?.Name ?? "User";
+    var roles = currentUser != null ? await UserManager.GetRolesAsync(currentUser) : new List<string>();
+    var primaryRole = roles.FirstOrDefault() ?? "Member";
+
+    <li class="nav-item d-flex align-items-center me-2">
+        <span class="navbar-text text-dark me-2">
+            <strong>@displayName</strong>
+            <span class="badge bg-primary text-white ms-1">@primaryRole</span>
+        </span>
+    </li>
+    <li class="nav-item">
+        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+            <button type="submit" class="btn btn-outline-danger btn-sm">Sign Out</button>
+        </form>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="btn btn-primary btn-sm" asp-controller="Account" asp-action="Login">Sign In</a>
+    </li>
+}
+</ul>
