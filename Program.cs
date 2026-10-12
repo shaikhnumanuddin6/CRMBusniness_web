@@ -11,36 +11,45 @@ namespace BusinessCRM
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // 1. Configure SQL Server and Entity Framework Core
-            builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(
-                    builder.Configuration.GetConnectionString("DefaultConnection")));
+            // 1. Retrieve connection string with descriptive error handling
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException(
+                    "Connection string 'DefaultConnection' was not found. " +
+                    "Ensure it is configured in appsettings.json, appsettings.Development.json, or environment variables.");
 
-            // 2. Configure ASP.NET Core Identity
+            // 2. Configure SQL Server with connection retry resiliency for cloud/production hosting
+            builder.Services.AddDbContext<AppDbContext>(options =>
+            {
+                options.UseSqlServer(connectionString, sqlOptions =>
+                {
+                    sqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                        errorNumbersToAdd: null);
+                });
+            });
+
+            // 3. Configure ASP.NET Core Identity
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
-                // Password settings
                 options.Password.RequireDigit = true;
                 options.Password.RequireLowercase = true;
                 options.Password.RequireUppercase = true;
                 options.Password.RequireNonAlphanumeric = true;
                 options.Password.RequiredLength = 8;
 
-                // User settings
                 options.User.RequireUniqueEmail = true;
 
-                // Account lockout settings
                 options.Lockout.AllowedForNewUsers = true;
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 
-                // Sign-in settings
                 options.SignIn.RequireConfirmedAccount = false;
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
 
-            // 3. Configure Application Cookie
+            // 4. Configure Application Cookie
             builder.Services.ConfigureApplicationCookie(options =>
             {
                 options.LoginPath = "/Account/Login";
@@ -53,27 +62,39 @@ namespace BusinessCRM
                 options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
             });
 
-            // 4. Add MVC Controllers with Views
+            // 5. Add MVC Controllers with Views
             builder.Services.AddControllersWithViews();
 
             var app = builder.Build();
 
-            // 5. Seed Roles and Initial SuperAdmin
+            // 6. Automatic Database Migration & Seeding on Startup
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
+                var logger = services.GetRequiredService<ILogger<Program>>();
+
                 try
                 {
+                    var context = services.GetRequiredService<AppDbContext>();
+
+                    // Automatically apply any pending EF Core migrations on the live database
+                    logger.LogInformation("Applying database migrations...");
+                    await context.Database.MigrateAsync();
+                    logger.LogInformation("Database migrations applied successfully.");
+
+                    // Automatically seed roles and initial accounts
+                    logger.LogInformation("Seeding initial roles and accounts...");
                     await DbInitializer.SeedRolesAndSuperAdminAsync(services);
+                    logger.LogInformation("Database seeding completed.");
                 }
                 catch (Exception ex)
                 {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "An error occurred during database role/admin seeding.");
+                    logger.LogError(ex, "An error occurred during database migration or seeding on startup.");
+                    throw; // Surfaces detailed error in hosting logs
                 }
             }
 
-            // 6. Configure HTTP request pipeline
+            // 7. Configure HTTP request pipeline
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -85,10 +106,10 @@ namespace BusinessCRM
 
             app.UseRouting();
 
-            // Authentication MUST precede Authorization
             app.UseAuthentication();
             app.UseAuthorization();
 
+            // Default Route: directly opens Account/Login
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Account}/{action=Login}/{id?}");
