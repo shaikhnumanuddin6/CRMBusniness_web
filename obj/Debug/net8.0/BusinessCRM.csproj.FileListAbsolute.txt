@@ -148,3 +148,5 @@ C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\bin\Debug\net8.0\Micr
 C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\bin\Debug\net8.0\Microsoft.Extensions.Identity.Core.dll
 C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\bin\Debug\net8.0\Microsoft.Extensions.Identity.Stores.dll
 C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\obj\Debug\net8.0\BusinessCRM.sourcelink.json
+C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\bin\Debug\net8.0\web.config
+C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\bin\Debug\net8.0\appsettings.Production.json

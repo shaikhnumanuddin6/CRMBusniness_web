@@ -15,7 +15,7 @@ namespace BusinessCRM
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException(
                     "Connection string 'DefaultConnection' was not found. " +
-                    "Ensure it is configured in appsettings.json, appsettings.Development.json, or environment variables.");
+                    "Ensure it is configured in appsettings.json, appsettings.Production.json, or environment variables.");
 
             // 2. Configure SQL Server with connection retry resiliency for cloud/production hosting
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -67,7 +67,7 @@ namespace BusinessCRM
 
             var app = builder.Build();
 
-            // 6. Automatic Database Migration & Seeding on Startup
+            // 6. Safe Database Migration & Seeding on Startup (Prevents HTTP 500.30 crash)
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
@@ -77,20 +77,20 @@ namespace BusinessCRM
                 {
                     var context = services.GetRequiredService<AppDbContext>();
 
-                    // Automatically apply any pending EF Core migrations on the live database
-                    logger.LogInformation("Applying database migrations...");
+                    logger.LogInformation("Attempting to apply database migrations on startup...");
                     await context.Database.MigrateAsync();
                     logger.LogInformation("Database migrations applied successfully.");
 
-                    // Automatically seed roles and initial accounts
                     logger.LogInformation("Seeding initial roles and accounts...");
                     await DbInitializer.SeedRolesAndSuperAdminAsync(services);
-                    logger.LogInformation("Database seeding completed.");
+                    logger.LogInformation("Database seeding completed successfully.");
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "An error occurred during database migration or seeding on startup.");
-                    throw; // Surfaces detailed error in hosting logs
+                    // Crucial: Log error without crashing process startup
+                    logger.LogError(ex, "WARNING: Database migration or seeding failed during startup. " +
+                                        "The application will continue starting so diagnostic information is available. " +
+                                        "Please verify your connection string and SQL Server connectivity.");
                 }
             }
 
