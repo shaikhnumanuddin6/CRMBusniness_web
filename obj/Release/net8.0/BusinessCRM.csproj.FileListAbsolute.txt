@@ -150,3 +150,9 @@ C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\obj\Release\net8.0\re
 C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\obj\Release\net8.0\BusinessCRM.pdb
 C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\obj\Release\net8.0\BusinessCRM.genruntimeconfig.cache
 C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\obj\Release\net8.0\ref\BusinessCRM.dll
+C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\bin\Release\net8.0\publish_test\web.config
+C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\bin\Release\net8.0\publish_test\appsettings.Development.json
+C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\bin\Release\net8.0\publish_test\appsettings.json
+C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\bin\Release\net8.0\publish_test\appsettings.Production.json
+C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\bin\Release\net8.0\publish_test\BusinessCRM.deps.json
+C:\Users\AIT\Desktop\CRM_Managment\BusinessCRM\BusinessCRM\bin\Release\net8.0\publish_test\BusinessCRM.runtimeconfig.json

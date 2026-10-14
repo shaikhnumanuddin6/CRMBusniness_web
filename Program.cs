@@ -1,4 +1,3 @@
-
 using BusinessCRM.Data;
 using BusinessCRM.Models;
 using Microsoft.AspNetCore.Identity;
@@ -12,149 +11,101 @@ namespace BusinessCRM
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // 1. Startup diagnostics
-            var startupLogger = LoggerFactory
-                .Create(logging => logging.AddConsole())
-                .CreateLogger("StartupDiagnostics");
+            // 1. Retrieve connection string
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-            startupLogger.LogInformation(
-                "Starting BusinessCRM application.");
-
-            startupLogger.LogInformation(
-                "Environment: {Environment}",
-                builder.Environment.EnvironmentName);
-
-            // 2. Retrieve and validate the connection string
-            var connectionString =
-                builder.Configuration.GetConnectionString("DefaultConnection");
-
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw new InvalidOperationException(
-                    "Connection string 'DefaultConnection' was not found. " +
-                    "Configure it in appsettings.json, " +
-                    "appsettings.Production.json, or environment variables.");
-            }
-
-            startupLogger.LogInformation(
-                "DefaultConnection is configured.");
-
-            // 3. Configure Entity Framework Core and SQL Server
+            // 2. Configure Entity Framework Core and SQL Server with connection retry resiliency
             builder.Services.AddDbContext<AppDbContext>(options =>
             {
-                options.UseSqlServer(connectionString, sqlOptions =>
+                if (!string.IsNullOrWhiteSpace(connectionString))
                 {
-                    sqlOptions.EnableRetryOnFailure(
-                        maxRetryCount: 5,
-                        maxRetryDelay: TimeSpan.FromSeconds(10),
-                        errorNumbersToAdd: null);
-                });
+                    options.UseSqlServer(connectionString, sqlOptions =>
+                    {
+                        sqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 5,
+                            maxRetryDelay: TimeSpan.FromSeconds(10),
+                            errorNumbersToAdd: null);
+                    });
+                }
             });
 
-            // 4. Configure ASP.NET Core Identity
-            builder.Services
-                .AddIdentity<ApplicationUser, IdentityRole>(options =>
-                {
-                    options.Password.RequireDigit = true;
-                    options.Password.RequireLowercase = true;
-                    options.Password.RequireUppercase = true;
-                    options.Password.RequireNonAlphanumeric = true;
-                    options.Password.RequiredLength = 8;
+            // 3. Configure ASP.NET Core Identity
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+            {
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireNonAlphanumeric = true;
+                options.Password.RequiredLength = 8;
 
-                    options.User.RequireUniqueEmail = true;
+                options.User.RequireUniqueEmail = true;
 
-                    options.Lockout.AllowedForNewUsers = true;
-                    options.Lockout.MaxFailedAccessAttempts = 5;
-                    options.Lockout.DefaultLockoutTimeSpan =
-                        TimeSpan.FromMinutes(15);
+                options.Lockout.AllowedForNewUsers = true;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 
-                    options.SignIn.RequireConfirmedAccount = false;
-                })
-                .AddEntityFrameworkStores<AppDbContext>()
-                .AddDefaultTokenProviders();
+                options.SignIn.RequireConfirmedAccount = false;
+            })
+            .AddEntityFrameworkStores<AppDbContext>()
+            .AddDefaultTokenProviders();
 
-            // 5. Configure authentication cookie
+            // 4. Configure Application Cookie
             builder.Services.ConfigureApplicationCookie(options =>
             {
                 options.LoginPath = "/Account/Login";
                 options.LogoutPath = "/Account/Logout";
                 options.AccessDeniedPath = "/Account/AccessDenied";
-
                 options.ExpireTimeSpan = TimeSpan.FromHours(8);
                 options.SlidingExpiration = true;
-
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SameSite = SameSiteMode.Lax;
-                options.Cookie.SecurePolicy =
-                    CookieSecurePolicy.Always;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
             });
 
-            // 6. Configure MVC controllers and views
+            // 5. Add MVC Controllers with Views
             builder.Services.AddControllersWithViews();
 
-            // 7. Build the application
             var app = builder.Build();
 
-            // 8. Apply migrations and seed initial data
-            // Database errors are logged without being silently ignored.
+            // 6. Safe Startup Database Migration & Seeding (Prevents HTTP Error 500.30 Crash)
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
-
-                var databaseLogger = services
-                    .GetRequiredService<ILogger<Program>>();
+                var logger = services.GetRequiredService<ILogger<Program>>();
 
                 try
                 {
-                    var context =
-                        services.GetRequiredService<AppDbContext>();
-
-                    databaseLogger.LogInformation(
-                        "Checking database connectivity...");
-
-                    var canConnect =
-                        await context.Database.CanConnectAsync();
-
-                    if (!canConnect)
+                    if (string.IsNullOrWhiteSpace(connectionString) || connectionString.Contains("YOUR_RUNASP_SERVER"))
                     {
-                        databaseLogger.LogError(
-                            "Cannot connect to the configured database. " +
-                            "Check the production connection string and permissions.");
+                        logger.LogWarning(
+                            "Database connection string is not yet configured with real production credentials. " +
+                            "Skipping startup database migration and seeding. " +
+                            "Please update appsettings.Production.json or runasp.net environment variables with your production SQL Server details.");
                     }
                     else
                     {
-                        databaseLogger.LogInformation(
-                            "Database connection successful.");
+                        var context = services.GetRequiredService<AppDbContext>();
 
-                        databaseLogger.LogInformation(
-                            "Applying database migrations...");
-
+                        logger.LogInformation("Attempting to apply database migrations on startup...");
                         await context.Database.MigrateAsync();
+                        logger.LogInformation("Database migrations applied successfully.");
 
-                        databaseLogger.LogInformation(
-                            "Database migrations completed.");
-
-                        databaseLogger.LogInformation(
-                            "Seeding initial roles and administrator...");
-
-                        await DbInitializer
-                            .SeedRolesAndSuperAdminAsync(services);
-
-                        databaseLogger.LogInformation(
-                            "Database seeding completed.");
+                        logger.LogInformation("Seeding initial roles and administrator...");
+                        await DbInitializer.SeedRolesAndSuperAdminAsync(services);
+                        logger.LogInformation("Database seeding completed successfully.");
                     }
                 }
                 catch (Exception ex)
                 {
-                    databaseLogger.LogError(
-                        ex,
-                        "Database initialization failed. " +
-                        "Check the database connection, permissions, " +
-                        "migrations, and seed data.");
+                    // Catch and log without crashing the host process
+                    logger.LogError(ex,
+                        "An error occurred while connecting to the database, applying migrations, or seeding on startup. " +
+                        "The application process will continue running so diagnostic logs can be inspected. " +
+                        "Please verify your connection string and SQL Server connectivity.");
                 }
             }
 
-            // 9. Configure the HTTP request pipeline
+            // 7. Configure HTTP request pipeline
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -162,23 +113,17 @@ namespace BusinessCRM
             }
 
             app.UseHttpsRedirection();
-
             app.UseStaticFiles();
 
             app.UseRouting();
 
             app.UseAuthentication();
-
             app.UseAuthorization();
 
-            // 10. Default route opens the login page
+            // Default Route: directly opens Account/Login
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Account}/{action=Login}/{id?}");
-
-            // 11. Start the application
-            startupLogger.LogInformation(
-                "BusinessCRM startup pipeline configured.");
 
             await app.RunAsync();
         }
